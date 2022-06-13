@@ -17,7 +17,7 @@ export const slice = createSlice( {
       }
     },
     addTodolistAC( state, action: PayloadAction<{ todolist: TodolistType }> ) {
-      state.push( { ...action.payload.todolist, filter: 'all', entityStatus: 'idle' } );
+      state.unshift( { ...action.payload.todolist, filter: 'all', entityStatus: 'idle' } );
     },
     changeTodolistTitleAC( state, action: PayloadAction<{ id: string, title: string }> ) {
       const index = state.findIndex( tl => tl.id === action.payload.id );
@@ -65,14 +65,11 @@ export const fetchTodolistsTC = () => {
 };
 export const removeTodolistTC = ( todolistId: string ) => {
   return ( dispatch: Dispatch ) => {
-    //изменим глобальный статус приложения, чтобы вверху полоса побежала
     dispatch( setAppStatusAC( { status: 'loading' } ) );
-    //изменим статус конкретного тудулиста, чтобы он мог задизеблить что надо
     dispatch( changeTodolistEntityStatusAC( { id: todolistId, status: 'loading' } ) );
     todolistsAPI.deleteTodolist( todolistId )
       .then( ( res ) => {
         dispatch( removeTodolistAC( { id: todolistId } ) );
-        //скажем глобально приложению, что асинхронная операция завершена
         dispatch( setAppStatusAC( { status: 'succeeded' } ) );
       } );
   };
@@ -97,7 +94,6 @@ export const changeTodolistTitleTC = ( id: string, title: string ) => {
 };
 
 // types
-
 export type FilterValuesType = 'all' | 'active' | 'completed';
 export type TodolistDomainType = TodolistType & {
   filter: FilterValuesType
