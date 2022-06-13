@@ -1,12 +1,13 @@
-export default {}
-import { appReducer, setAppErrorAC, setAppStatusAC } from './app-reducer';
+export default {};
+import { appReducer, RequestStatusType, setAppErrorAC, setAppStatusAC } from './app-reducer';
 
-/*let startState;
+let startState: { status: RequestStatusType; error: string | null; isInitialized: boolean; } | undefined;
 
 beforeEach( () => {
   startState = {
     error: null,
     status: 'idle',
+    isInitialized: false,
   };
 } );
 
@@ -22,5 +23,5 @@ test( 'correct status should be set', () => {
   const endState = appReducer( startState, setAppStatusAC( { status: 'loading' } ) );
 
   expect( endState.status ).toBe( 'loading' );
-} );*/
+} );
 
