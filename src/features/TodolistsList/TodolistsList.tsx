@@ -40,7 +40,7 @@ export const TodolistsList: React.FC<PropsType> = ( { demo = false } ) => {
   }, [] );
 
   const addTask = useCallback( function ( title: string, todolistId: string ) {
-    dispatch( addTaskTC( title, todolistId ) );
+    dispatch( addTaskTC( { title, todolistId } ) );
   }, [] );
 
   const changeStatus = useCallback( function ( id: string, status: TaskStatuses, todolistId: string ) {

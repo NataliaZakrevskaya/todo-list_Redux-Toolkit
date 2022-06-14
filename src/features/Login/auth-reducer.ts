@@ -1,18 +1,15 @@
-import { Dispatch } from 'redux';
 import { setAppStatusAC } from '../../app/app-reducer';
 import { authAPI, FieldErrorType, LoginParamsType } from '../../api/todolists-api';
 import { handleServerAppError, handleServerNetworkError } from '../../utils/error-utils';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 
-export const loginTC = createAsyncThunk<{ isLoggedIn: boolean }, LoginParamsType, { rejectValue: { errors: Array<string>, fieldsErrors?: Array<FieldErrorType> } }>( 'auth/login', async ( param, ThunkAPI ) => {
+export const loginTC = createAsyncThunk<undefined, LoginParamsType, { rejectValue: { errors: Array<string>, fieldsErrors?: Array<FieldErrorType> } }>( 'auth/login', async ( param, ThunkAPI ) => {
   ThunkAPI.dispatch( setAppStatusAC( { status: 'loading' } ) );
   try {
     const res = await authAPI.login( param );
     if ( res.data.resultCode === 0 ) {
-
       ThunkAPI.dispatch( setAppStatusAC( { status: 'succeeded' } ) );
-      return { isLoggedIn: true };
     } else {
       handleServerAppError( res.data, ThunkAPI.dispatch );
       return ThunkAPI.rejectWithValue( { errors: res.data.messages, fieldsErrors: res.data.fieldsErrors } );
@@ -22,6 +19,22 @@ export const loginTC = createAsyncThunk<{ isLoggedIn: boolean }, LoginParamsType
     const error: AxiosError = err;
     handleServerNetworkError( error, ThunkAPI.dispatch );
     return ThunkAPI.rejectWithValue( { errors: [ error.message ], fieldsErrors: undefined } );
+  }
+} );
+export const logoutTC = createAsyncThunk( 'auth/logout', async ( param, ThunkAPI ) => {
+  ThunkAPI.dispatch( setAppStatusAC( { status: 'loading' } ) );
+  const res = await authAPI.logout();
+  try {
+    if ( res.data.resultCode === 0 ) {
+      ThunkAPI.dispatch( setAppStatusAC( { status: 'succeeded' } ) );
+    } else {
+      handleServerAppError( res.data, ThunkAPI.dispatch );
+      return ThunkAPI.rejectWithValue( {} );
+    }
+  } catch ( err ) {
+    // @ts-ignore
+    const error: AxiosError = err;
+    handleServerNetworkError( error, ThunkAPI.dispatch );
   }
 } );
 
@@ -36,30 +49,14 @@ const slice = createSlice( {
     },
   },
   extraReducers: builder => {
-    builder.addCase( loginTC.fulfilled, ( state, action ) => {
-      state.isLoggedIn = action.payload.isLoggedIn;
+    builder.addCase( loginTC.fulfilled, ( state ) => {
+      state.isLoggedIn = true;
+    } );
+    builder.addCase( logoutTC.fulfilled, ( state ) => {
+      state.isLoggedIn = false;
     } );
   },
 } );
 
 export const authReducer = slice.reducer;
 export const { setIsLoggedInAC } = slice.actions;
-
-// thunks
-
-export const logoutTC = () => ( dispatch: Dispatch ) => {
-  dispatch( setAppStatusAC( { status: 'loading' } ) );
-  authAPI.logout()
-    .then( res => {
-      if ( res.data.resultCode === 0 ) {
-        dispatch( setIsLoggedInAC( { value: false } ) );
-        dispatch( setAppStatusAC( { status: 'succeeded' } ) );
-      } else {
-        handleServerAppError( res.data, dispatch );
-      }
-    } )
-    .catch( ( error ) => {
-      handleServerNetworkError( error, dispatch );
-    } );
-};
-
