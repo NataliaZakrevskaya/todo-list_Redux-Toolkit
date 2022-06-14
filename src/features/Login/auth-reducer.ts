@@ -1,10 +1,11 @@
 import { Dispatch } from 'redux';
 import { setAppStatusAC } from '../../app/app-reducer';
-import { authAPI, LoginParamsType } from '../../api/todolists-api';
+import { authAPI, FieldErrorType, LoginParamsType } from '../../api/todolists-api';
 import { handleServerAppError, handleServerNetworkError } from '../../utils/error-utils';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { AxiosError } from 'axios';
 
-export const loginTC = createAsyncThunk( 'auth/login', async ( param: LoginParamsType, ThunkAPI ) => {
+export const loginTC = createAsyncThunk<{ isLoggedIn: boolean }, LoginParamsType, { rejectValue: { errors: Array<string>, fieldsErrors?: Array<FieldErrorType> } }>( 'auth/login', async ( param, ThunkAPI ) => {
   ThunkAPI.dispatch( setAppStatusAC( { status: 'loading' } ) );
   try {
     const res = await authAPI.login( param );
@@ -14,18 +15,15 @@ export const loginTC = createAsyncThunk( 'auth/login', async ( param: LoginParam
       return { isLoggedIn: true };
     } else {
       handleServerAppError( res.data, ThunkAPI.dispatch );
-      return { isLoggedIn: false };
+      return ThunkAPI.rejectWithValue( { errors: res.data.messages, fieldsErrors: res.data.fieldsErrors } );
     }
-  } catch ( error ) {
+  } catch ( err ) {
     // @ts-ignore
+    const error: AxiosError = err;
     handleServerNetworkError( error, ThunkAPI.dispatch );
-    return { isLoggedIn: false };
+    return ThunkAPI.rejectWithValue( { errors: [ error.message ], fieldsErrors: undefined } );
   }
 } );
-
-export const loginTC_ = ( data: LoginParamsType ) => ( dispatch: Dispatch ) => {
-
-};
 
 const slice = createSlice( {
   name: 'auth',
@@ -38,10 +36,10 @@ const slice = createSlice( {
     },
   },
   extraReducers: builder => {
-    builder.addCase(loginTC.fulfilled, (state, action) => {
+    builder.addCase( loginTC.fulfilled, ( state, action ) => {
       state.isLoggedIn = action.payload.isLoggedIn;
-    } )
-  }
+    } );
+  },
 } );
 
 export const authReducer = slice.reducer;

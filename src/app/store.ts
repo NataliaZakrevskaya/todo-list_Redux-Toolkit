@@ -5,6 +5,7 @@ import { appReducer } from './app-reducer';
 import { authReducer } from '../features/Login/auth-reducer';
 import { configureStore } from '@reduxjs/toolkit';
 import thunkMiddleware from 'redux-thunk';
+import { useDispatch } from 'react-redux';
 
 const rootReducer = combineReducers( {
   tasks: tasksReducer,
@@ -15,13 +16,15 @@ const rootReducer = combineReducers( {
 
 export const store = configureStore( {
   reducer: rootReducer,
-  middleware: getDefaultMiddleware  => getDefaultMiddleware().prepend( thunkMiddleware ),
+  middleware: getDefaultMiddleware => getDefaultMiddleware().prepend( thunkMiddleware ),
 
-});
+} );
 
 export type RootReducerType = typeof rootReducer
 export type AppRootStateType = ReturnType<RootReducerType>
-export type AppDispatch = typeof store.dispatch
+export type AppDispatchType = typeof store.dispatch
+
+export const useAppDispatch = () => useDispatch<AppDispatchType>();
 
 // @ts-ignore
 window.store = store;
